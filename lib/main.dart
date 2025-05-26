@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'Screens/login_screen.dart';
+import 'Screens/main_screen.dart';
 import 'Screens/register_screen.dart';
 import 'Screens/search_screen.dart';
 import 'Screens/start_screen.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => StartScreen(),
         '/register': (context) => RegisterScreen(),
         '/login': (context) => LoginScreen(),
-        '/search': (context) => const SearchScreen(),
+        '/main': (context) => MainScreen(),
       },
     );
   }

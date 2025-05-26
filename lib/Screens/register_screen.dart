@@ -64,11 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response.statusCode == 200) {
         _showSnackBar("Registro exitoso", Colors.green);
 
-        // Navegación al HomeScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        Navigator.pushReplacementNamed(context, '/main');
       } else {
         final responseBody = jsonDecode(response.body);
         final errorMessage = responseBody['message'] ?? 'Error desconocido';

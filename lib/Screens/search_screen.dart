@@ -4,11 +4,14 @@ import '../Model/Album.dart';
 import '../Model/Artista.dart';
 import '../Model/Cancion.dart';
 import '../Model/Playlist.dart';
-import '../Service/spotify_service.dart';
+import '../Service/album_service.dart';
+import '../Service/artista_service.dart';
+import '../Service/cancion_service.dart';
+import '../Service/playlist_service.dart';
 import 'details/album_detail_screen.dart';
 import 'details/artista_detail_screen.dart';
 import 'details/playlist_detail_screen.dart';
-import 'details/song_detail_screen.dart';
+import 'details/cancion_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -19,7 +22,10 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
-  final SpotifyService _spotifyService = SpotifyService();
+  final CancionService _cancionService = CancionService();
+  final ArtistaService _artistaService = ArtistaService();
+  final AlbumService _albumService = AlbumService();
+  final PlaylistService _playlistService = PlaylistService();
 
   List<Cancion> _canciones = [];
   List<Artista> _artistas = [];
@@ -41,10 +47,10 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final canciones = await _spotifyService.buscarCanciones(query);
-      final artistas = await _spotifyService.buscarArtistas(query);
-      final albumes = await _spotifyService.buscarAlbumes(query);
-      final playlists = await _spotifyService.buscarPlaylists(query);
+      final canciones = await _cancionService.buscarCanciones(query);
+      final artistas = await _artistaService.buscarArtistas(query);
+      final albumes = await _albumService.buscarAlbumes(query);
+      final playlists = await _playlistService.buscarPlaylists(query);
 
       setState(() {
         _canciones = canciones;
@@ -82,13 +88,13 @@ class _SearchScreenState extends State<SearchScreen> {
       subtitle: Text(cancion.artista),
       trailing: _buildBadge('Canción', Colors.green),
       onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SongDetailScreen(cancion: cancion),
-        ),
-      );
-    },
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CancionDetailScreen(cancion: cancion),
+          ),
+        );
+      },
     );
   }
 
@@ -129,23 +135,23 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildPlaylist(Playlist playlist) {
-  return ListTile(
-    leading: playlist.imagenUrl.isNotEmpty
-        ? Image.network(playlist.imagenUrl, width: 50, height: 50)
-        : const Icon(Icons.queue_music),
-    title: Text(playlist.nombre),
-    subtitle: Text("Por ${playlist.creadorNombre}"),
-    trailing: _buildBadge('Playlist', Colors.deepPurple),
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PlaylistDetailScreen(playlist: playlist),
-        ),
-      );
-    },
-  );
-}
+    return ListTile(
+      leading: playlist.imagenUrl.isNotEmpty
+          ? Image.network(playlist.imagenUrl, width: 50, height: 50)
+          : const Icon(Icons.queue_music),
+      title: Text(playlist.nombre),
+      subtitle: Text("Por ${playlist.creadorNombre}"),
+      trailing: _buildBadge('Playlist', Colors.deepPurple),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlaylistDetailScreen(playlist: playlist),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,9 +193,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                         ..._albumes.map(_buildAlbum).toList(),
                         const SizedBox(height: 16),
-                        const Text("Playlists", 
-                          style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text("Playlists",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                         ..._playlists.map(_buildPlaylist).toList(),
                       ],
                     ),

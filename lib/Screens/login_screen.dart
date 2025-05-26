@@ -31,8 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final response = await _authService.login(idToken);
 
         if (response.statusCode == 200) {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          Navigator.pushReplacementNamed(context, '/main');
         } else {
           try {
             final Map<String, dynamic> body = jsonDecode(response.body);
