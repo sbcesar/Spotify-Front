@@ -29,6 +29,48 @@ class PlaylistService {
     }
   }
 
+  Future<void> eliminarPlaylist(String token, String playlistId) async {
+  final url = Uri.parse('$playlistUrl/$playlistId');
+  final response = await http.delete(
+    url,
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Error al eliminar la playlist');
+  }
+}
+
+  Future<void> agregarCancionAPlaylist(String token, String playlistId, String cancionId) async {
+    final response = await http.put(
+      Uri.parse('http://192.168.0.23:8081/playlists/$playlistId/agregarCancion/$cancionId'),
+      headers: {
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Error al agregar la canción a la playlist");
+    }
+  }
+
+  Future<Playlist> eliminarCancionDePlaylist(String token, String playlistId, String cancionId) async {
+  final response = await http.put(
+    Uri.parse('http://192.168.0.23:8081/playlists/$playlistId/eliminarCancion/$cancionId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return Playlist.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception("Error al eliminar canción de la playlist");
+  }
+}
+
   Future<void> darLike(String idToken, String playlistId) async {
     final url = Uri.parse('$playlistUrl/like/$playlistId');
     final response = await http.post(

@@ -13,6 +13,7 @@ import '../Model/Cancion.dart';
 import '../Model/Playlist.dart';
 import 'details/album_detail_screen.dart';
 import 'details/playlist_detail_screen.dart';
+import '../Service/playlist_service.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -75,6 +76,52 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
+  Widget _buildPlaylistOptions(BuildContext context, Playlist playlist) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.edit),
+          title: const Text('Editar Playlist'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.pushNamed(context, '/editarPlaylist', arguments: playlist)
+                .then((_) => _cargarBiblioteca());
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.delete, color: Colors.red),
+          title: const Text('Eliminar Playlist', style: TextStyle(color: Colors.red)),
+          onTap: () async {
+            Navigator.pop(context);
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text("Confirmar eliminación"),
+                content: const Text("¿Seguro que deseas eliminar esta playlist?"),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
+                  TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Eliminar")),
+                ],
+              ),
+            );
+
+            if (confirmed == true) {
+              final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+              if (token != null) {
+                await PlaylistService().eliminarPlaylist(token, playlist.id!);
+                _cargarBiblioteca();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Playlist eliminada")),
+                );
+              }
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildContenido() {
     final List<Widget> items = [];
 
@@ -122,17 +169,58 @@ class _LibraryScreenState extends State<LibraryScreen> {
             })));
     }
     if (filtro == 'All' || filtro == 'Playlists') {
-      items.addAll(likedPlaylists.map((playlist) => ListTile(
-            leading: Image.network(playlist.imagenUrl, width: 50, height: 50),
-            title: Text(playlist.nombre),
-            onTap: () async {
-              await Navigator.push(
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      items.addAll(likedPlaylists.map((playlist) => GestureDetector(
+        onLongPress: () {
+          if (playlist.creadorId == currentUserId) {
+            Navigator.pushNamed(context, '/editarPlaylist', arguments: playlist)
+                .then((_) => _cargarBiblioteca());
+          }
+        },
+        child: ListTile(
+          leading: playlist.imagenUrl.isNotEmpty
+              ? Image.network(playlist.imagenUrl, width: 50, height: 50)
+              : Image.asset('assets/song_cover.png', width: 50, height: 50),
+          title: Text(playlist.nombre),
+          trailing: playlist.creadorId == currentUserId
+              ? IconButton(
+                  icon: const Icon(Icons.remove_circle, color: Colors.red),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text("Confirmar eliminación"),
+                        content: const Text("¿Eliminar esta playlist?"),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
+                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Eliminar")),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+                      if (token != null) {
+                        await PlaylistService().eliminarPlaylist(token, playlist.id!);
+                        _cargarBiblioteca();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Playlist eliminada")),
+                        );
+                      }
+                    }
+                  },
+                )
+              : null,
+          onTap: () async {
+            await Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (_) => PlaylistDetailScreen(playlist: playlist)),
-              );
-              _cargarBiblioteca();
-            })));
+              MaterialPageRoute(builder: (_) => PlaylistDetailScreen(playlist: playlist)),
+            );
+            _cargarBiblioteca();
+          },
+        ),
+      )));
     }
 
     return Expanded(child: ListView(children: items));
@@ -160,6 +248,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _isLoading ? const CircularProgressIndicator() : _buildContenido()
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/crearPlaylist').then((_) => _cargarBiblioteca());
+        },
+        child: const Icon(Icons.playlist_add),
       ),
     );
   }

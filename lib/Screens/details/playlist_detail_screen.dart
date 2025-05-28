@@ -68,12 +68,53 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     }
   }
 
+  Future<void> _eliminarCancion(String cancionId) async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (token == null) return;
+
+    try {
+      final actualizada = await PlaylistService().eliminarCancionDePlaylist(token, widget.playlist.id!, cancionId);
+      setState(() {
+        widget.playlist.canciones.clear();
+        widget.playlist.canciones.addAll(actualizada.canciones);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Canción eliminada")),
+      );
+    } catch (e) {
+      print("Error al eliminar canción: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error al eliminar canción")),
+      );
+    }
+  }
+
+  void _confirmarEliminacion(String cancionId) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("¿Eliminar canción?"),
+        content: const Text("¿Seguro que deseas quitar esta canción de la playlist?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _eliminarCancion(cancionId);
+            },
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final p = widget.playlist;
+    final playlist = widget.playlist;
 
     return Scaffold(
-      appBar: AppBar(title: Text(p.nombre)),
+      appBar: AppBar(title: Text(playlist.nombre)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Center(
@@ -82,22 +123,28 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (p.imagenUrl.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      p.imagenUrl,
-                      width: 250,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: (playlist.imagenUrl.isNotEmpty)
+                      ? Image.network(
+                          playlist.imagenUrl,
+                          width: 250,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.asset(
+                          'assets/song_cover.png',
+                          width: 250,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        ),
+                ),
                 const SizedBox(height: 20),
-                Text(p.nombre,
+                Text(playlist.nombre,
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
-                Text("Creador: ${p.creadorNombre}"),
+                Text("Creador: ${playlist.creadorNombre}"),
                 IconButton(
                   icon: Icon(
                       _isLiked ? Icons.favorite : Icons.favorite_border),
@@ -112,13 +159,17 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 10),
-                ...p.canciones.map((cancion) => ListTile(
-                      leading: cancion.imagenUrl.isNotEmpty
-                          ? Image.network(cancion.imagenUrl, width: 50, height: 50)
-                          : const Icon(Icons.music_note),
-                      title: Text(cancion.nombre),
-                      subtitle: Text(cancion.artista),
-                    )),
+                ...playlist.canciones.map((cancion) => ListTile(
+                  leading: cancion.imagenUrl.isNotEmpty
+                      ? Image.network(cancion.imagenUrl, width: 50, height: 50)
+                      : const Icon(Icons.music_note),
+                  title: Text(cancion.nombre),
+                  subtitle: Text(cancion.artista),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                    onPressed: () => _confirmarEliminacion(cancion.id),
+                  ),
+                )),
               ],
             ),
           ),

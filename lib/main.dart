@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 
+import 'Model/Playlist.dart';
+import 'Screens/editar_playlist_screen.dart';
 import 'Screens/login_screen.dart';
 import 'Screens/main_screen.dart';
+import 'Screens/playlist_screen.dart';
 import 'Screens/register_screen.dart';
 import 'Screens/search_screen.dart';
 import 'Screens/start_screen.dart';
@@ -33,6 +36,11 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/login': (context) => LoginScreen(),
         '/main': (context) => MainScreen(),
+        '/crearPlaylist': (context) => const CrearPlaylistScreen(),
+        '/editarPlaylist': (context) {
+          final playlist = ModalRoute.of(context)!.settings.arguments as Playlist;
+          return EditarPlaylistScreen(playlist: playlist);
+        },
       },
     );
   }

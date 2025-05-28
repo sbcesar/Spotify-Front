@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../Model/Cancion.dart';
+import '../../Model/Playlist.dart';
 import '../../Service/cancion_service.dart';
+import '../../Service/playlist_service.dart';
 
 class CancionDetailScreen extends StatefulWidget {
   final Cancion cancion;
@@ -68,6 +70,71 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
     });
   }
 
+  Future<void> _mostrarSelectorDePlaylists() async {
+  final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+  if (token == null) return;
+
+  // Obtén las playlists creadas por el usuario desde el backend
+  final response = await http.get(
+    Uri.parse('http://192.168.0.23:8081/usuario/biblioteca'),
+    headers: {"Authorization": "Bearer $token"},
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final playlists = (data['biblioteca']['playlists'] as List)
+        .map((p) => Playlist.fromJson(p))
+        .where((p) => p.creadorId == FirebaseAuth.instance.currentUser?.uid)
+        .toList();
+
+    if (playlists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No tienes playlists creadas")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Selecciona una playlist"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              itemCount: playlists.length,
+              itemBuilder: (_, index) {
+                final playlistId = playlists[index];
+                final playlist = playlists[index];
+                return ListTile(
+                  leading: playlist.imagenUrl.isNotEmpty
+                      ? Image.network(playlist.imagenUrl, width: 40, height: 40, fit: BoxFit.cover)
+                      : const Icon(Icons.music_note),
+                  title: Text(playlist.nombre),
+                  onTap: () async {
+                    try {
+                      await PlaylistService().agregarCancionAPlaylist(token, playlist.id!, widget.cancion.id);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Canción agregada")),
+                      );
+                    } catch (_) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Error al agregar canción")),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
   String _formatDuration(int durationMs) {
     final minutes = (durationMs ~/ 60000);
     final seconds = ((durationMs % 60000) ~/ 1000).toString().padLeft(2, '0');
@@ -121,6 +188,12 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
                         onPressed: _toggleLike,
                       ),
                 const SizedBox(height: 10),
+
+                ElevatedButton.icon(
+                  onPressed: _mostrarSelectorDePlaylists,
+                  icon: const Icon(Icons.playlist_add),
+                  label: const Text("Agregar a playlist"),
+                ),
 
                 if (c.previewUrl != null && c.previewUrl!.isNotEmpty)
                   ElevatedButton.icon(

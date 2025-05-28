@@ -15,13 +15,6 @@ class HomeScreen extends StatelessWidget {
               'Bienvenido a Spotify!',
               style: TextStyle(fontSize: 24),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/search');
-              },
-              child: const Text('Ir a búsqueda'),
-            ),
           ],
         ),
       ),
