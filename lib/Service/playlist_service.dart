@@ -18,6 +18,18 @@ class PlaylistService {
     }
   }
 
+  Future<List<Playlist>> obtenerTodas() async {
+    final url = Uri.parse('http://192.168.0.23:8081/playlists/todas');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Playlist.fromJson(e)).toList();
+    } else {
+      throw Exception('Error al obtener todas las playlists');
+    }
+  }
+
   Future<Playlist> obtenerPlaylistPorId(String id) async {
     final url = Uri.parse('$playlistUrl/$id');
     final response = await http.get(url);

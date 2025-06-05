@@ -8,6 +8,7 @@ class Cancion {
   final String? previewUrl;
   final int popularidad;
   final String urlSpotify;
+  final String? audioUrl;
 
   Cancion({
     required this.id,
@@ -19,6 +20,7 @@ class Cancion {
     required this.previewUrl,
     required this.popularidad,
     required this.urlSpotify,
+    required this.audioUrl,
   });
 
   factory Cancion.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class Cancion {
       previewUrl: json['previewUrl'],
       popularidad: json['popularidad'],
       urlSpotify: json['urlSpotify'],
+      audioUrl: json['audioUrl'],
     );
   }
 
@@ -46,6 +49,7 @@ class Cancion {
       'previewUrl': previewUrl,
       'popularidad': popularidad,
       'urlSpotify': urlSpotify,
+      'audioUrl': audioUrl,
     };
   }
 }

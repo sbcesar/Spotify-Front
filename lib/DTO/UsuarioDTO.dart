@@ -7,6 +7,7 @@ class UsuarioDTO {
   final int playlistCount;
   final int seguidores;
   final int seguidos;
+  final String role;
   final BibliotecaDTO biblioteca;
 
   UsuarioDTO({
@@ -16,6 +17,7 @@ class UsuarioDTO {
     required this.playlistCount,
     required this.seguidores,
     required this.seguidos,
+    required this.role,
     required this.biblioteca,
   });
 
@@ -27,6 +29,7 @@ class UsuarioDTO {
       playlistCount: json['playlistCount'] ?? 0,
       seguidores: json['seguidores'] ?? 0,
       seguidos: json['seguidos'] ?? 0,
+      role: json['role'] ?? 'USER',
       biblioteca: BibliotecaDTO.fromJson(json['biblioteca']),
     );
   }

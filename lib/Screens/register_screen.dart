@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:spotify_tfg_flutter/Service/auth_service.dart';
 import '../DTO/usuario_register_dto.dart';
-import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,14 +16,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
 
-  // Método para mostrar SnackBar con mensaje
   void _showSnackBar(String message, [Color color = Colors.red]) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: color),
     );
   }
 
-  // Método para validar los campos antes de registrar
   bool _validateFields() {
     if (_nombreController.text.isEmpty) {
       _showSnackBar("El nombre no puede estar vacío");
@@ -43,10 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return true;
   }
 
-  // Método para registrar el usuario
   Future<void> _registerUser() async {
     if (!_validateFields()) {
-      print("❌ Validación fallida");
       return;
     }
 
@@ -57,13 +52,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     try {
-      print("➡ Intentando registrar usuario...");
       final response = await _authService.register(usuario);
-      print("⬅ Respuesta recibida del backend: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         _showSnackBar("Registro exitoso", Colors.green);
-
         Navigator.pushReplacementNamed(context, '/main');
       } else {
         final responseBody = jsonDecode(response.body);
@@ -78,30 +69,97 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Account")),
+      backgroundColor: const Color(0xFF0D1C2F),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D1C2F),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: const Color(0xFFB1D1EC), // Color de la flecha
+          onPressed: () {
+            Navigator.pop(context); // Volver atrás
+          },
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nombreController,
-              decoration: const InputDecoration(labelText: "What's your name?"),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: "What's your email?"),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: "Create a password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _registerUser,
-              child: const Text('Create an account'),
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 80),
+              const Text(
+                "Create an Account",
+                style: TextStyle(
+                  color: Color(0xFFB1D1EC),
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 100),
+              TextField(
+                controller: _nombreController,
+                decoration: InputDecoration(
+                  labelText: "Name",
+                  labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+                  filled: true,
+                  fillColor: const Color(0xFF2C698D),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: "Email",
+                  labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+                  filled: true,
+                  fillColor: const Color(0xFF2C698D),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+                  filled: true,
+                  fillColor: const Color(0xFF2C698D),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: _registerUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7495B4),
+                  minimumSize: const Size(200, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  shadowColor: Colors.black.withOpacity(0.3),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  "Create",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

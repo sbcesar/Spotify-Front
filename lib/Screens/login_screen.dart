@@ -1,12 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:spotify_tfg_flutter/Service/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'home_screen.dart';
-
-class LoginScreen extends StatefulWidget  {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
@@ -47,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-    void _showErrorDialog(String message) {
+  void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -65,31 +62,85 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0D1C2F),
       appBar: AppBar(
-        title: const Text("Log in"),
+        backgroundColor: const Color(0xFF0D1C2F),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: const Color(0xFFB1D1EC), // Color de la flecha
+          onPressed: () {
+            Navigator.pop(context); // Volver atrás
+          },
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login,
-              child: const Text("Iniciar sesión"),
-            )
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 80),
+              const Text(
+                "Log in to Your Account",
+                style: TextStyle(
+                  color: Color(0xFFB1D1EC),
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 100),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: "Email",
+                  labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+                  filled: true,
+                  fillColor: const Color(0xFF2C698D),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+                  filled: true,
+                  fillColor: const Color(0xFF2C698D),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7495B4),
+                  minimumSize: const Size(200, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  shadowColor: Colors.black.withOpacity(0.3),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  "Iniciar sesión",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
