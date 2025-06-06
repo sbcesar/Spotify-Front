@@ -41,7 +41,7 @@ class _EditarPlaylistScreenState extends State<EditarPlaylistScreen> {
     };
 
     final response = await http.put(
-      Uri.parse('http://192.168.0.23:8081/playlists/${widget.playlist.id}/editar'),
+      Uri.parse('https://music-sound.onrender.com/playlists/${widget.playlist.id}/editar'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final String apiUrl = 'http://192.168.0.23:8081/canciones/all';
+  final String apiUrl = 'https://music-sound.onrender.com/canciones/all';
 
   List<Cancion> cancionesLocales = [];
   String? _currentPlayingId;

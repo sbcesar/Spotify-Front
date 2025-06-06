@@ -32,7 +32,7 @@ class _ArtistaDetailScreenState extends State<ArtistaDetailScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.23:8081/usuario/perfil'),
+        Uri.parse('https://music-sound.onrender.com/usuario/perfil'),
         headers: {"Authorization": "Bearer $token"},
       );
 

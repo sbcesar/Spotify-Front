@@ -4,8 +4,11 @@ import '../Model/Playlist.dart';
 import 'package:http/http.dart' as http;
 
 class PlaylistService {
-  final String playlistUrl = 'http://192.168.0.23:8081/playlists';
-  final String spotifyUrl = 'http://192.168.0.23:8081/spotify';
+  // final String playlistUrl = 'http://192.168.0.23:8081/playlists';
+  // final String spotifyUrl = 'http://192.168.0.23:8081/spotify';
+  
+  final String playlistUrl = 'https://music-sound.onrender.com/playlists';
+  final String spotifyUrl = 'https://music-sound.onrender.com/spotify';
 
   Future<List<Playlist>> buscarPlaylists(String query) async {
     final url = Uri.parse('$spotifyUrl/buscar/playlists?query=$query');
@@ -19,7 +22,7 @@ class PlaylistService {
   }
 
   Future<List<Playlist>> obtenerTodas() async {
-    final url = Uri.parse('http://192.168.0.23:8081/playlists/todas');
+    final url = Uri.parse('https://music-sound.onrender.com/playlists/todas');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -41,23 +44,25 @@ class PlaylistService {
     }
   }
 
-  Future<void> eliminarPlaylist(String token, String playlistId) async {
-  final url = Uri.parse('$playlistUrl/$playlistId');
-  final response = await http.delete(
-    url,
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
+  
 
-  if (response.statusCode != 200) {
-    throw Exception('Error al eliminar la playlist');
+  Future<void> eliminarPlaylist(String token, String playlistId) async {
+    final url = Uri.parse('$playlistUrl/$playlistId');
+    final response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al eliminar la playlist');
+    }
   }
-}
 
   Future<void> agregarCancionAPlaylist(String token, String playlistId, String cancionId) async {
     final response = await http.put(
-      Uri.parse('http://192.168.0.23:8081/playlists/$playlistId/agregarCancion/$cancionId'),
+      Uri.parse('https://music-sound.onrender.com/playlists/$playlistId/agregarCancion/$cancionId'),
       headers: {
         "Authorization": "Bearer $token",
       },
@@ -70,7 +75,7 @@ class PlaylistService {
 
   Future<Playlist> eliminarCancionDePlaylist(String token, String playlistId, String cancionId) async {
   final response = await http.put(
-    Uri.parse('http://192.168.0.23:8081/playlists/$playlistId/eliminarCancion/$cancionId'),
+    Uri.parse('https://music-sound.onrender.com/playlists/$playlistId/eliminarCancion/$cancionId'),
     headers: {
       'Authorization': 'Bearer $token',
     },

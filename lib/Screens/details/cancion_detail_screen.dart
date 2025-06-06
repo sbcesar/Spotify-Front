@@ -42,7 +42,7 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.23:8081/usuario/perfil'),
+        Uri.parse('https://music-sound.onrender.com/usuario/perfil'),
         headers: {"Authorization": "Bearer $token"},
       );
 
@@ -79,7 +79,7 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
     if (token == null) return;
 
     final response = await http.get(
-      Uri.parse('http://192.168.0.23:8081/usuario/biblioteca'),
+      Uri.parse('https://music-sound.onrender.com/usuario/biblioteca'),
       headers: {"Authorization": "Bearer $token"},
     );
 

@@ -33,7 +33,7 @@ class _CrearPlaylistScreenState extends State<CrearPlaylistScreen> {
 
     try {
       final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-      final url = Uri.parse('http://192.168.0.23:8081/playlists/crear');
+      final url = Uri.parse('https://music-sound.onrender.com/playlists/crear');
 
       final body = {
         "nombre": nombre,
