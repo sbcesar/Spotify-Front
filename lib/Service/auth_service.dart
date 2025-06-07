@@ -5,7 +5,7 @@ import 'package:spotify_tfg_flutter/DTO/usuario_register_dto.dart';
 
 
 class AuthService {
-  // final String baseUrl = 'http://192.168.0.23:8081/usuario';
+
   final String baseUrl = 'https://music-sound.onrender.com/usuario';
 
   Future<http.Response> register(UsuarioRegisterDTO usuario) async {

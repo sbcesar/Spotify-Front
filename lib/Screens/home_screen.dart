@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../Model/Cancion.dart';
-import '../Service/audio_player_service.dart'; // Asegúrate de tener este archivo implementado
+import '../Service/audio_player_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print("❌ Error al cargar canciones locales: $e");
+      print("Error al cargar canciones locales: $e");
     }
   }
 

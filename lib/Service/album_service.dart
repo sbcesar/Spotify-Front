@@ -5,9 +5,6 @@ import '../Model/Album.dart';
 import 'package:http/http.dart' as http;
 
 class AlbumService {
-  // final String albumUrl = 'http://192.168.0.23:8081/albumes';
-  // final String spotifyUrl = 'http://192.168.0.23:8081/spotify';
-
   final String albumUrl = 'https://music-sound.onrender.com/albumes';
   final String spotifyUrl = 'https://music-sound.onrender.com/spotify';
 

@@ -8,7 +8,6 @@ import 'Screens/login_screen.dart';
 import 'Screens/main_screen.dart';
 import 'Screens/playlist_screen.dart';
 import 'Screens/register_screen.dart';
-import 'Screens/search_screen.dart';
 import 'Screens/start_screen.dart';
 
 void main() async {

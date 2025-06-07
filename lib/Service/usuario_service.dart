@@ -5,7 +5,7 @@ import '../DTO/UsuarioBibliotecaMostrableDTO.dart';
 import '../DTO/UsuarioDTO.dart';
 
 class UsuarioService {
-  // final String baseUrl = 'http://192.168.0.23:8081/usuario';
+
   final String baseUrl = 'https://music-sound.onrender.com/usuario';
 
   Future<UsuarioDTO> obtenerUsuarioActual() async {
