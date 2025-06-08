@@ -5,12 +5,10 @@ import 'package:http/http.dart' as http;
 import '../Model/Artista.dart';
 
 class ArtistaService {
-
-  final String artistaUrl = 'https://music-sound.onrender.com/artistas';
-  final String spotifyUrl = 'https://music-sound.onrender.com/spotify';
+  final String baseUrl = 'https://music-sound.onrender.com';
 
   Future<List<Artista>> buscarArtistas(String query) async {
-    final url = Uri.parse('$spotifyUrl/buscar/artistas?query=$query');
+    final url = Uri.parse('$baseUrl/spotify/buscar/artistas?query=$query');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -22,7 +20,7 @@ class ArtistaService {
   }
 
   Future<Artista> obtenerArtistaPorId(String id) async {
-    final url = Uri.parse('$artistaUrl/$id');
+    final url = Uri.parse('$baseUrl/artistas/$id');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -32,8 +30,25 @@ class ArtistaService {
     }
   }
 
+  Future<List<String>> obtenerLikedArtistas(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/usuario/perfil'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final liked = (data['biblioteca']['likedArtistas'] as List).cast<String>();
+      return liked;
+    } else {
+      throw Exception('Error al obtener artistas likeados');
+    }
+  }
+
   Future<void> darLike(String idToken, String artistaId) async {
-    final url = Uri.parse('$artistaUrl/like/$artistaId');
+    final url = Uri.parse('$baseUrl/artistas/like/$artistaId');
     final response = await http.post(
       url,
       headers: {
@@ -45,7 +60,7 @@ class ArtistaService {
   }
 
   Future<void> quitarLike(String idToken, String artistaId) async {
-    final url = Uri.parse('$artistaUrl/like/$artistaId');
+    final url = Uri.parse('$baseUrl/artistas/like/$artistaId');
     final response = await http.delete(
       url,
       headers: {

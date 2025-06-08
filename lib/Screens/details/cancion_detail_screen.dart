@@ -1,141 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 
 import '../../Model/Cancion.dart';
 import '../../Model/Playlist.dart';
-import '../../Service/cancion_service.dart';
-import '../../Service/playlist_service.dart';
+import '../../Viewmodels/cancion_viewmodel.dart';
+import '../../Viewmodels/playlist_viewmodel.dart';
 
-class CancionDetailScreen extends StatefulWidget {
+class CancionDetailScreen extends StatelessWidget {
   final Cancion cancion;
 
   const CancionDetailScreen({super.key, required this.cancion});
-
-  @override
-  State<CancionDetailScreen> createState() => _CancionDetailScreenState();
-}
-
-class _CancionDetailScreenState extends State<CancionDetailScreen> {
-  final CancionService _cancionService = CancionService();
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
-  bool _isLiked = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkIfLiked();
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  Future<void> _checkIfLiked() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (token == null) return;
-
-    try {
-      final response = await http.get(
-        Uri.parse('https://music-sound.onrender.com/usuario/perfil'),
-        headers: {"Authorization": "Bearer $token"},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final biblioteca = data['biblioteca'];
-        final likedIds = (biblioteca['likedCanciones'] as List).cast<String>();
-        setState(() {
-          _isLiked = likedIds.contains(widget.cancion.id);
-        });
-      }
-    } catch (e) {
-      print("Error al verificar si la canción ya tiene like: $e");
-    }
-  }
-
-  Future<void> _toggleLike() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (token == null) throw Exception("Token no disponible");
-
-    if (_isLiked) {
-      await _cancionService.quitarLike(token, widget.cancion.id);
-    } else {
-      await _cancionService.darLike(token, widget.cancion.id);
-    }
-
-    setState(() {
-      _isLiked = !_isLiked;
-    });
-  }
-
-  Future<void> _mostrarSelectorDePlaylists() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (token == null) return;
-
-    final response = await http.get(
-      Uri.parse('https://music-sound.onrender.com/usuario/biblioteca'),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final playlists = (data['biblioteca']['playlists'] as List)
-          .map((p) => Playlist.fromJson(p))
-          .where((p) => p.creadorId == FirebaseAuth.instance.currentUser?.uid)
-          .toList();
-
-      if (playlists.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No tienes playlists creadas")),
-        );
-        return;
-      }
-
-      showDialog(
-        context: context,
-        builder: (_) {
-          return AlertDialog(
-            title: const Text("Selecciona una playlist"),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                itemCount: playlists.length,
-                itemBuilder: (_, index) {
-                  final playlist = playlists[index];
-                  return ListTile(
-                    leading: playlist.imagenUrl.isNotEmpty
-                        ? Image.network(playlist.imagenUrl, width: 40, height: 40, fit: BoxFit.cover)
-                        : const Icon(Icons.music_note),
-                    title: Text(playlist.nombre),
-                    onTap: () async {
-                      try {
-                        await PlaylistService().agregarCancionAPlaylist(token, playlist.id!, widget.cancion.id);
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Canción agregada")),
-                        );
-                      } catch (_) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Error al agregar canción")),
-                        );
-                      }
-                    },
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      );
-    }
-  }
 
   String _formatDuration(int durationMs) {
     final minutes = (durationMs ~/ 60000);
@@ -143,16 +19,59 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
     return "$minutes:$seconds";
   }
 
+  Future<void> _mostrarSelectorDePlaylists(BuildContext context, Cancion cancion) async {
+    final playlistVM = context.read<PlaylistViewModel>();
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (token == null) return;
+
+    final playlists = await playlistVM.obtenerPlaylistsDelUsuario(token);
+    if (playlists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No tienes playlists creadas")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Selecciona una playlist"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              itemCount: playlists.length,
+              itemBuilder: (_, index) {
+                final p = playlists[index];
+                return ListTile(
+                  leading: p.imagenUrl.isNotEmpty
+                      ? Image.network(p.imagenUrl, width: 40, height: 40, fit: BoxFit.cover)
+                      : const Icon(Icons.music_note),
+                  title: Text(p.nombre),
+                  onTap: () async {
+                    await playlistVM.agregarCancion(p.id!, cancion.id);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Canción agregada")),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final c = widget.cancion;
+    final cancionVM = context.watch<CancionViewModel>();
+    final isLiked = cancionVM.isLiked(cancion.id);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          c.nombre,
-          style: const TextStyle(color: Color(0xFFB1D1EC)),
-        ),
+        title: Text(cancion.nombre, style: const TextStyle(color: Color(0xFFB1D1EC))),
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -164,26 +83,20 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Imagen destacada
-                if (c.imagenUrl.isNotEmpty)
-                const SizedBox(height: 25),
+                if (cancion.imagenUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      c.imagenUrl,
+                      cancion.imagenUrl,
                       width: 320,
                       height: 320,
                       fit: BoxFit.cover,
                     ),
                   ),
                 const SizedBox(height: 25),
-
-                // Título y botones
-                // Título, artista y botones
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Título y artista alineados a la izquierda
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8.0),
@@ -191,59 +104,45 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              c.nombre,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFB1D1EC),
-                              ),
+                              cancion.nombre,
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFB1D1EC)),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              "Artista: ${c.artista}",
-                              style: const TextStyle(fontSize: 16, color: Colors.white70),
-                            ),
+                            Text("Artista: ${cancion.artista}", style: const TextStyle(fontSize: 16, color: Colors.white70)),
                           ],
                         ),
                       ),
                     ),
-                    // Botones alineados horizontalmente
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                          icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
                           color: Colors.red,
                           iconSize: 28,
-                          onPressed: _toggleLike,
+                          onPressed: () => cancionVM.toggleLike(cancion.id),
                         ),
                         IconButton(
                           icon: const Icon(Icons.add, color: Colors.white),
                           iconSize: 28,
-                          onPressed: _mostrarSelectorDePlaylists,
+                          onPressed: () => _mostrarSelectorDePlaylists(context, cancion),
                         ),
                       ],
                     ),
                   ],
                 ),
-
-
                 const SizedBox(height: 120),
-
-                // Info adicional
-                Text("Álbum: ${c.album}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
-                Text("Popularidad: ${c.popularidad}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
-                Text("Duración: ${_formatDuration(c.duracionMs)}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
-
+                Text("Álbum: ${cancion.album}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
+                Text("Popularidad: ${cancion.popularidad}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
+                Text("Duración: ${_formatDuration(cancion.duracionMs)}", style: const TextStyle(fontSize: 15, color: Colors.white70)),
                 const SizedBox(height: 40),
-
-                // Audio o mensaje
-                c.audioUrl != null && c.audioUrl!.isNotEmpty
+                cancion.audioUrl != null && cancion.audioUrl!.isNotEmpty
                     ? ElevatedButton.icon(
                         onPressed: () async {
                           try {
-                            await _audioPlayer.setUrl(c.audioUrl!);
-                            _audioPlayer.play();
-                          } catch (e) {
+                            final player = AudioPlayer();
+                            await player.setUrl(cancion.audioUrl!);
+                            player.play();
+                          } catch (_) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("No se pudo reproducir el audio")),
                             );
@@ -254,15 +153,10 @@ class _CancionDetailScreenState extends State<CancionDetailScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7495B4),
                           minimumSize: const Size(200, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         ),
                       )
-                    : const Text(
-                        "Sin audio disponible",
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
-                      ),
+                    : const Text("Sin audio disponible", style: TextStyle(color: Colors.grey, fontSize: 16)),
               ],
             ),
           ),

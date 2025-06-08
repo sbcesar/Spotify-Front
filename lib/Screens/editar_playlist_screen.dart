@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:provider/provider.dart';
 
 import '../../Model/Playlist.dart';
+import '../../Viewmodels/playlist_viewmodel.dart';
 
 class EditarPlaylistScreen extends StatefulWidget {
   final Playlist playlist;
@@ -31,36 +30,27 @@ class _EditarPlaylistScreenState extends State<EditarPlaylistScreen> {
   Future<void> _guardarCambios() async {
     setState(() => _isLoading = true);
 
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (token == null) return;
+    final success = await context.read<PlaylistViewModel>().editarPlaylist(
+          widget.playlist.id!,
+          _nombreController.text.trim(),
+          _descripcionController.text.trim(),
+          _imagenUrlController.text.trim(),
+        );
 
-    final body = {
-      "nombre": _nombreController.text.trim(),
-      "descripcion": _descripcionController.text.trim(),
-      "imagenUrl": _imagenUrlController.text.trim(),
-    };
+    setState(() => _isLoading = false);
 
-    final response = await http.put(
-      Uri.parse('https://music-sound.onrender.com/playlists/${widget.playlist.id}/editar'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(body),
-    );
+    if (!mounted) return;
 
-    if (response.statusCode == 200) {
-      Navigator.pop(context);
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Playlist actualizada")),
       );
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Error al actualizar playlist")),
       );
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override

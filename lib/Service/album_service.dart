@@ -5,11 +5,10 @@ import '../Model/Album.dart';
 import 'package:http/http.dart' as http;
 
 class AlbumService {
-  final String albumUrl = 'https://music-sound.onrender.com/albumes';
-  final String spotifyUrl = 'https://music-sound.onrender.com/spotify';
+  final String baseUrl = 'https://music-sound.onrender.com';
 
   Future<List<Album>> buscarAlbumes(String query) async {
-    final url = Uri.parse('$spotifyUrl/buscar/albumes?query=$query');
+    final url = Uri.parse('$baseUrl/spotify/buscar/albumes?query=$query');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -21,7 +20,7 @@ class AlbumService {
   }
 
   Future<Album> obtenerAlbumPorId(String id) async {
-    final url = Uri.parse('$albumUrl/$id');
+    final url = Uri.parse('$baseUrl/albumes/$id');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -31,8 +30,24 @@ class AlbumService {
     }
   }
 
+  Future<List<String>> obtenerLikedAlbums(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/usuario/perfil'),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final biblioteca = data['biblioteca'];
+      final likedIds = (biblioteca['likedAlbums'] as List).cast<String>();
+      return likedIds;
+    } else {
+      throw Exception('Error al obtener álbumes con like');
+    }
+  }
+
   Future<void> darLike(String idToken, String albumId) async {
-    final url = Uri.parse('$albumUrl/like/$albumId');
+    final url = Uri.parse('$baseUrl/albumes/like/$albumId');
     final response = await http.post(
       url,
       headers: {
@@ -44,7 +59,7 @@ class AlbumService {
   }
 
   Future<void> quitarLike(String idToken, String albumId) async {
-    final url = Uri.parse('$albumUrl/like/$albumId');
+    final url = Uri.parse('$baseUrl/albumes/like/$albumId');
     final response = await http.delete(
       url,
       headers: {

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../Model/Album.dart';
 import '../Model/Artista.dart';
 import '../Model/Cancion.dart';
 import '../Model/Playlist.dart';
-import '../Service/album_service.dart';
-import '../Service/artista_service.dart';
-import '../Service/cancion_service.dart';
-import '../Service/playlist_service.dart';
+import '../Viewmodels/album_viewmodel.dart';
+import '../Viewmodels/artista_viewmodel.dart';
+import '../Viewmodels/cancion_viewmodel.dart';
+import '../Viewmodels/playlist_viewmodel.dart';
 import 'details/album_detail_screen.dart';
 import 'details/artista_detail_screen.dart';
 import 'details/playlist_detail_screen.dart';
@@ -22,47 +23,27 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
-  final CancionService _cancionService = CancionService();
-  final ArtistaService _artistaService = ArtistaService();
-  final AlbumService _albumService = AlbumService();
-  final PlaylistService _playlistService = PlaylistService();
-
-  List<Cancion> _canciones = [];
-  List<Artista> _artistas = [];
-  List<Album> _albumes = [];
-  List<Playlist> _playlists = [];
 
   bool _isLoading = false;
 
-  void _buscar() async {
+  void _buscar(BuildContext context) async {
     final query = _controller.text.trim();
     if (query.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-      _canciones = [];
-      _artistas = [];
-      _albumes = [];
-      _playlists = [];
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final canciones = await _cancionService.buscarCanciones(query);
-      final artistas = await _artistaService.buscarArtistas(query);
-      final albumes = await _albumService.buscarAlbumes(query);
-      final playlists = await _playlistService.buscarPlaylists(query);
-
-      setState(() {
-        _canciones = canciones;
-        _artistas = artistas;
-        _albumes = albumes;
-        _playlists = playlists;
-        _isLoading = false;
-      });
+      await Future.wait([
+        context.read<CancionViewModel>().buscarCanciones(query),
+        context.read<ArtistaViewModel>().buscarArtistas(query),
+        context.read<AlbumViewModel>().buscarAlbumes(query),
+        context.read<PlaylistViewModel>().buscarPlaylists(query),
+      ]);
     } catch (e) {
-      setState(() => _isLoading = false);
-      print('Error: $e');
+      print('Error en búsqueda: $e');
     }
+
+    setState(() => _isLoading = false);
   }
 
   Widget _buildBadge(String label, Color color) {
@@ -72,10 +53,7 @@ class _SearchScreenState extends State<SearchScreen> {
         color: color,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
+      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
     );
   }
 
@@ -87,14 +65,10 @@ class _SearchScreenState extends State<SearchScreen> {
       title: Text(cancion.nombre),
       subtitle: Text(cancion.artista),
       trailing: _buildBadge('Canción', Colors.green),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CancionDetailScreen(cancion: cancion),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CancionDetailScreen(cancion: cancion)),
+      ),
     );
   }
 
@@ -105,14 +79,10 @@ class _SearchScreenState extends State<SearchScreen> {
           : const Icon(Icons.person),
       title: Text(artista.nombre),
       trailing: _buildBadge('Artista', Colors.blue),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ArtistaDetailScreen(artista: artista),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ArtistaDetailScreen(artista: artista)),
+      ),
     );
   }
 
@@ -123,43 +93,45 @@ class _SearchScreenState extends State<SearchScreen> {
           : const Icon(Icons.album),
       title: Text(album.nombre),
       trailing: _buildBadge('Álbum', Colors.orange),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AlbumDetailScreen(album: album),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AlbumDetailScreen(album: album)),
+      ),
     );
   }
 
   Widget _buildPlaylist(Playlist playlist) {
     return ListTile(
       leading: playlist.imagenUrl.isNotEmpty
-          ? Image.network(playlist.imagenUrl, width: 50, height: 50)
+          ? Image.network(
+              playlist.imagenUrl,
+              width: 50,
+              height: 50,
+              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+            )
           : const Icon(Icons.queue_music),
       title: Text(playlist.nombre),
-      subtitle: Text("Por ${playlist.creadorNombre}"),
+      subtitle: Text("Por ${playlist.creadorNombre ?? 'Desconocido'}"),
       trailing: _buildBadge('Playlist', Colors.deepPurple),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PlaylistDetailScreen(playlist: playlist),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PlaylistDetailScreen(playlist: playlist)),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final canciones = context.watch<CancionViewModel>().canciones;
+    final artistas = context.watch<ArtistaViewModel>().artistas;
+    final albumes = context.watch<AlbumViewModel>().albums;
+    final playlists = context.watch<PlaylistViewModel>().resultadosBusqueda;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Buscar"),
         automaticallyImplyLeading: false,
-        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -170,10 +142,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 labelText: 'Buscar...',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: _buscar,
+                  onPressed: () => _buscar(context),
                 ),
               ),
-              onSubmitted: (_) => _buscar(),
+              onSubmitted: (_) => _buscar(context),
             ),
             const SizedBox(height: 20),
             _isLoading
@@ -182,24 +154,20 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: ListView(
                       children: [
                         const Text("Canciones",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ..._canciones.map(_buildCancion).toList(),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...canciones.map(_buildCancion).toList(),
                         const SizedBox(height: 16),
                         const Text("Artistas",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ..._artistas.map(_buildArtista).toList(),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...artistas.map(_buildArtista).toList(),
                         const SizedBox(height: 16),
                         const Text("Álbumes",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ..._albumes.map(_buildAlbum).toList(),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...albumes.map(_buildAlbum).toList(),
                         const SizedBox(height: 16),
                         const Text("Playlists",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        ..._playlists.map(_buildPlaylist).toList(),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ...playlists.map(_buildPlaylist).toList(),
                       ],
                     ),
                   ),
