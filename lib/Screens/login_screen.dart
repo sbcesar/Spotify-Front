@@ -12,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscureText = true;
 
   Future<void> _login(AuthViewModel vm) async {
     final success = await vm.login(_emailController.text, _passwordController.text);
@@ -66,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscureText,
                     decoration: InputDecoration(
                       labelText: "Password",
                       labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
@@ -75,6 +76,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureText ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureText = !_obscureText;
+                          });
+                        },
                       ),
                     ),
                     style: const TextStyle(color: Colors.white),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Playlist.dart';
 import '../../Viewmodels/playlist_viewmodel.dart';
+import 'cancion_detail_screen.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final Playlist playlist;
@@ -114,6 +115,14 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                             icon: const Icon(Icons.remove_circle, color: Colors.red),
                             onPressed: () => _confirmarEliminacion(context, c.id, playlistVM),
                           ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CancionDetailScreen(cancion: c),
+                              ),
+                            );
+                          },
                         )),
                   ],
                 ),

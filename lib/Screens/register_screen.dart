@@ -14,32 +14,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _repeatPasswordController = TextEditingController();
 
-  bool _validateFields() {
-    if (_nombreController.text.isEmpty) {
-      _showSnackBar("El nombre no puede estar vacío");
-      return false;
-    }
-    if (_emailController.text.isEmpty ||
-        !_emailController.text.contains('@') ||
-        !_emailController.text.contains('.')) {
-      _showSnackBar("El email no es válido");
-      return false;
-    }
-    if (_passwordController.text.length < 6) {
-      _showSnackBar("La contraseña debe tener al menos 6 caracteres");
-      return false;
-    }
-    return true;
-  }
+  bool _obscurePassword = true;
+  bool _obscureRepeatPassword = true;
 
-  void _showSnackBar(String message, [Color color = Colors.red]) {
+  String? _nombreError;
+  String? _emailError;
+  String? _passwordError;
+  String? _repeatPasswordError;
+
+  void _showSnackBar(String message, {Color color = Colors.red}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
     );
   }
 
-  Future<void> _registerUser(AuthViewModel authViewModel) async {
+  bool _validateFields() {
+    setState(() {
+      _nombreError = _nombreController.text.isEmpty ? 'El nombre no puede estar vacío' : null;
+
+      if (_emailController.text.isEmpty) {
+        _emailError = 'El email no puede estar vacío';
+      } else if (!_emailController.text.contains('@') || !_emailController.text.contains('.')) {
+        _emailError = 'El email no es válido';
+      } else {
+        _emailError = null;
+      }
+
+      _passwordError = _passwordController.text.length < 6
+          ? 'La contraseña debe tener al menos 6 caracteres'
+          : null;
+
+      _repeatPasswordError = _passwordController.text != _repeatPasswordController.text
+          ? 'Las contraseñas no coinciden'
+          : null;
+    });
+
+    return [_nombreError, _emailError, _passwordError, _repeatPasswordError].every((e) => e == null);
+  }
+
+  Future<void> _registerUser(AuthViewModel vm) async {
     if (!_validateFields()) return;
 
     final usuario = UsuarioRegisterDTO(
@@ -48,27 +69,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text,
     );
 
-    final success = await authViewModel.register(usuario);
+    final success = await vm.register(usuario);
     if (success) {
-      _showSnackBar("Registro exitoso", Colors.green);
+      _showSnackBar("Registro exitoso", color: Colors.green);
       Navigator.pushReplacementNamed(context, '/main');
-    } else if (authViewModel.error != null) {
-      _showSnackBar(authViewModel.error!);
+    } else if (vm.error != null) {
+      _showSnackBar(vm.error!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthViewModel>(
-      builder: (context, authViewModel, child) {
+      builder: (context, vm, _) {
         return Scaffold(
           backgroundColor: const Color(0xFF0D1C2F),
           appBar: AppBar(
             backgroundColor: const Color(0xFF0D1C2F),
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              color: const Color(0xFFB1D1EC),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFFB1D1EC)),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -87,56 +107,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   const SizedBox(height: 100),
-                  TextField(
+
+                  // Nombre
+                  _buildField(
                     controller: _nombreController,
-                    decoration: InputDecoration(
-                      labelText: "Name",
-                      labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
-                      filled: true,
-                      fillColor: const Color(0xFF2C698D),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    style: const TextStyle(color: Colors.white),
+                    label: "Name",
+                    errorText: _nombreError,
                   ),
+
                   const SizedBox(height: 20),
-                  TextField(
+
+                  // Email
+                  _buildField(
                     controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
-                      filled: true,
-                      fillColor: const Color(0xFF2C698D),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    style: const TextStyle(color: Colors.white),
+                    label: "Email",
+                    errorText: _emailError,
                   ),
+
                   const SizedBox(height: 20),
-                  TextField(
+
+                  // Contraseña
+                  _buildField(
                     controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
-                      filled: true,
-                      fillColor: const Color(0xFF2C698D),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    obscureText: true,
-                    style: const TextStyle(color: Colors.white),
+                    label: "Password",
+                    errorText: _passwordError,
+                    obscureText: _obscurePassword,
+                    toggleObscure: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // Repetir contraseña
+                  _buildField(
+                    controller: _repeatPasswordController,
+                    label: "Repeat Password",
+                    errorText: _repeatPasswordError,
+                    obscureText: _obscureRepeatPassword,
+                    toggleObscure: () =>
+                        setState(() => _obscureRepeatPassword = !_obscureRepeatPassword),
+                  ),
+
                   const SizedBox(height: 40),
+
+                  // Botón de registro
                   ElevatedButton(
-                    onPressed: authViewModel.isLoading
-                        ? null
-                        : () => _registerUser(authViewModel),
+                    onPressed: vm.isLoading ? null : () => _registerUser(vm),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7495B4),
                       minimumSize: const Size(200, 50),
@@ -146,14 +162,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       shadowColor: Colors.black.withOpacity(0.3),
                       elevation: 5,
                     ),
-                    child: authViewModel.isLoading
-                        ? const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          )
-                        : const Text(
-                            "Create",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                    child: vm.isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text("Create", style: TextStyle(color: Colors.white, fontSize: 16)),
                   ),
                 ],
               ),
@@ -161,6 +172,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String label,
+    String? errorText,
+    bool obscureText = false,
+    VoidCallback? toggleObscure,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(color: Color(0xFFB1D1EC)),
+            filled: true,
+            fillColor: const Color(0xFF2C698D),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            suffixIcon: toggleObscure != null
+                ? IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white,
+                    ),
+                    onPressed: toggleObscure,
+                  )
+                : null,
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 12),
+            child: Text(
+              errorText,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 }

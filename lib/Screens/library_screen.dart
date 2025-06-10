@@ -250,7 +250,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: ListView(children: items),
+                  child: ListView(children: [
+                    ...items,
+                    const SizedBox(height: 100),
+                  ]),
                 ),
               ],
             ),
@@ -260,6 +263,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             children: [
               FloatingActionButton(
                 heroTag: "mezclarBtn",
+                backgroundColor: const Color(0xFF2C698D),
                 onPressed: () =>
                     _mostrarDialogoMezcla(usuarioVM, playlistVM),
                 child: const Icon(Icons.shuffle),
@@ -267,6 +271,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               const SizedBox(height: 10),
               FloatingActionButton(
                 heroTag: "crearBtn",
+                backgroundColor: const Color(0xFF2C698D),
                 onPressed: () {
                   Navigator.pushNamed(context, '/crearPlaylist')
                       .then((_) => usuarioVM.cargarBiblioteca());
