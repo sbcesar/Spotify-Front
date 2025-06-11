@@ -30,7 +30,7 @@ class UsuarioDTO {
       seguidores: json['seguidores'] ?? 0,
       seguidos: json['seguidos'] ?? 0,
       role: json['role'] ?? 'USER',
-      biblioteca: BibliotecaDTO.fromJson(json['biblioteca']),
+      biblioteca: BibliotecaDTO.fromJson(json['biblioteca']?? {} ),
     );
   }
 }

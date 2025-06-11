@@ -127,6 +127,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Consumer2<UsuarioViewModel, PlaylistViewModel>(
       builder: (context, usuarioVM, playlistVM, child) {
         final biblioteca = usuarioVM.usuarioBiblioteca?.biblioteca;
+        final esPremium = usuarioVM.usuarioActual?.role == 'PREMIUM';
+
 
         if (usuarioVM.isLoading || biblioteca == null) {
           return const Scaffold(
@@ -261,13 +263,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              FloatingActionButton(
-                heroTag: "mezclarBtn",
-                backgroundColor: const Color(0xFF2C698D),
-                onPressed: () =>
-                    _mostrarDialogoMezcla(usuarioVM, playlistVM),
-                child: const Icon(Icons.shuffle),
-              ),
+              if (esPremium)
+                FloatingActionButton(
+                  heroTag: "mezclarBtn",
+                  backgroundColor: const Color(0xFF2C698D),
+                  onPressed: () =>
+                      _mostrarDialogoMezcla(usuarioVM, playlistVM),
+                  child: const Icon(Icons.shuffle),
+                ),
               const SizedBox(height: 10),
               FloatingActionButton(
                 heroTag: "crearBtn",

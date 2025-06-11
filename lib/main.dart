@@ -15,6 +15,7 @@ import 'Viewmodels/album_viewmodel.dart';
 import 'Viewmodels/artista_viewmodel.dart';
 import 'Viewmodels/auth_viewmodel.dart';
 import 'Viewmodels/playlist_viewmodel.dart';
+import 'Viewmodels/stripe_viewmodel.dart';
 import 'Viewmodels/usuario_viewmodel.dart';
 
 void main() async {
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AlbumViewModel()),
         ChangeNotifierProvider(create: (_) => ArtistaViewModel()),
         ChangeNotifierProvider(create: (_) => AudioPlayerViewModel()),
+        ChangeNotifierProvider(create: (_) => StripeViewModel()),
       ],
       child: MaterialApp(
         title: 'Spotify App',

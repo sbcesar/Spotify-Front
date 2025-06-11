@@ -10,6 +10,7 @@ class UsuarioService {
 
   Future<UsuarioDTO> obtenerUsuarioActual() async {
     final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+
     final response = await http.get(
       Uri.parse('$baseUrl/perfil'),
       headers: {
@@ -19,6 +20,7 @@ class UsuarioService {
     );
 
     if (response.statusCode == 200) {
+      print("Respuesta recibida: ${response.body}");
       return UsuarioDTO.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("No se pudo obtener el usuario actual");
